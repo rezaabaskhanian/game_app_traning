@@ -13,7 +13,7 @@ func (d *MySqlDB) IsPhoneNumberUniqe(phonenumber string) (bool, error) {
 
 	row := d.db.QueryRow(`select * from usersTraning where phone_number = ?`, phonenumber)
 
-	err := row.Scan(&user.ID, &user.Name, &user.PhoneNumber, &created_At)
+	err := row.Scan(&user.ID, &user.Name, &user.PhoneNumber, &user.Password, &created_At)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -22,6 +22,23 @@ func (d *MySqlDB) IsPhoneNumberUniqe(phonenumber string) (bool, error) {
 		return false, fmt.Errorf("cant scan query result : %w", err)
 	}
 	return false, nil
+}
+
+func (d *MySqlDB) GetUserByPhoneNumber(phonenumber string) (entity.User, bool, error) {
+	user := entity.User{}
+	var created_At []uint8
+
+	row := d.db.QueryRow(`select * from usersTraning where phone_number = ?`, phonenumber)
+
+	err := row.Scan(&user.ID, &user.Name, &user.PhoneNumber, &user.Password, &created_At)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return entity.User{}, false, nil
+		}
+		return entity.User{}, false, fmt.Errorf("cant scan query result : %w", err)
+	}
+	return user, true, nil
 }
 
 func (d *MySqlDB) Register(u entity.User) (entity.User, error) {

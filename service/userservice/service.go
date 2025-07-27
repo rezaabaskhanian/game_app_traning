@@ -11,6 +11,7 @@ import (
 type Repositoty interface {
 	IsPhoneNumberUniqe(phonenumber string) (bool, error)
 	Register(u entity.User) (entity.User, error)
+	GetUserByPhoneNumber(phonenumber string) (entity.User, bool, error)
 }
 
 type Service struct {
@@ -90,18 +91,32 @@ func (s Service) Register(req RegisterRequest) (RegisterResponse, error) {
 }
 
 type LoginRequest struct {
-	PhoneNumber string
-	Password    string
+	PhoneNumber string `json:"phone_number"`
+	Password    string `json:"password"`
 }
 
 type LoginResponse struct {
-	user entity.User
 }
 
-func (s Service) Login(req LoginRequest) LoginResponse {
+func (s Service) Login(req LoginRequest) (LoginResponse, error) {
 
 	//check the existence of phonenumber from reopsitory
-	panic("nowww")
+	user, exist, err := s.repo.GetUserByPhoneNumber(req.PhoneNumber)
+
+	if err != nil {
+		return LoginResponse{}, fmt.Errorf("unexpected user : %w", err)
+	}
+
+	if !exist {
+		return LoginResponse{}, fmt.Errorf("user or passwordsss isnt correct : %w", err)
+
+	}
+
+	if user.Password != GetMD5Hash(req.Password) {
+		return LoginResponse{}, fmt.Errorf("user or password isnt correct : %w", err)
+	}
+
+	return LoginResponse{}, nil
 
 }
 
