@@ -11,7 +11,7 @@ func IsValid(phonenumber string) bool {
 		return false
 	}
 
-	if _, err := strconv.Atoi(phonenumber[:2]); err == nil {
+	if _, err := strconv.Atoi(phonenumber[:2]); err != nil {
 		return false
 	}
 

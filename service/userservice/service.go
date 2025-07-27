@@ -1,6 +1,8 @@
 package userservice
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"game_app-traning/entity"
 	"game_app-traning/pkg/phonenumber"
@@ -16,12 +18,18 @@ type Service struct {
 }
 
 type RegisterRequest struct {
-	PhoneNumber string
-	Name        string
+	Name        string `json:"name"`
+	PhoneNumber string `json:"phone_number"`
+	Password    string `json:"password`
 }
 
 type RegisterResponse struct {
 	User entity.User
+}
+
+func New(repo Repositoty) Service {
+	return Service{repo: repo}
+
 }
 
 func (s Service) Register(req RegisterRequest) (RegisterResponse, error) {
@@ -46,6 +54,13 @@ func (s Service) Register(req RegisterRequest) (RegisterResponse, error) {
 		}
 
 	}
+	// TODO check the password with regex pattern
+
+	// validate password
+
+	if len(req.Password) < 8 {
+		return RegisterResponse{}, fmt.Errorf("password length should be grater tahn 8")
+	}
 
 	//validate name
 
@@ -59,6 +74,7 @@ func (s Service) Register(req RegisterRequest) (RegisterResponse, error) {
 		ID:          0,
 		PhoneNumber: req.PhoneNumber,
 		Name:        req.Name,
+		Password:    GetMD5Hash(req.Password),
 	}
 
 	createdUser, err := s.repo.Register(user)
@@ -71,4 +87,25 @@ func (s Service) Register(req RegisterRequest) (RegisterResponse, error) {
 		User: createdUser,
 	}, nil
 
+}
+
+type LoginRequest struct {
+	PhoneNumber string
+	Password    string
+}
+
+type LoginResponse struct {
+	user entity.User
+}
+
+func (s Service) Login(req LoginRequest) LoginResponse {
+
+	//check the existence of phonenumber from reopsitory
+	panic("nowww")
+
+}
+
+func GetMD5Hash(text string) string {
+	hash := md5.Sum([]byte(text))
+	return hex.EncodeToString(hash[:])
 }

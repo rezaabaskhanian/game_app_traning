@@ -1,34 +1,63 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"game_app-traning/entity"
 	"game_app-traning/repository/mysql"
+	"game_app-traning/service/userservice"
+	"io"
+	"log"
+	"net/http"
 )
 
 func main() {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/health-check", healthCheckHandler)
+
+	mux.HandleFunc("/users/register", userRegisterHandler)
+
+	log.Println("server is listen on port 8080")
+
+	server := http.Server{Addr: ":9090", Handler: mux}
+
+	log.Fatal(server.ListenAndServe())
 
 }
 
-func TestuserMySqlRepo() {
+func healthCheckHandler(writer http.ResponseWriter, req *http.Request) {
+	fmt.Println("healthCheck")
+	fmt.Fprintln(writer, "OK")
+
+}
+
+func userRegisterHandler(writer http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodPost {
+		fmt.Fprintf(writer, "invalid method")
+		return
+	}
+
+	data, err := io.ReadAll(req.Body)
+	if err != nil {
+		writer.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, err.Error())))
+		return
+	}
+
+	var uReq userservice.RegisterRequest
+	err = json.Unmarshal(data, &uReq)
+	if err != nil {
+		writer.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, err.Error())))
+		return
+	}
+
 	mysqlRepo := mysql.New()
+	userSvc := userservice.New(mysqlRepo)
 
-	createdUser, err := mysqlRepo.Register(entity.User{
-		ID:          0,
-		Name:        "reza",
-		PhoneNumber: "0937278",
-	})
-
+	_, err = userSvc.Register(uReq)
 	if err != nil {
-		fmt.Println("cant find user")
-	} else {
-		fmt.Println("created user ", createdUser)
+		writer.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, err.Error())))
+		return
 	}
 
-	isUniqe, err := mysqlRepo.IsPhoneNumberUniqe(createdUser.PhoneNumber)
+	writer.Write([]byte(`{"message": "user created"}`))
 
-	if err != nil {
-		fmt.Println("uniqe err", err)
-	}
-	fmt.Println("isuniqe", isUniqe)
 }

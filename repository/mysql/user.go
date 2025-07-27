@@ -25,7 +25,7 @@ func (d *MySqlDB) IsPhoneNumberUniqe(phonenumber string) (bool, error) {
 }
 
 func (d *MySqlDB) Register(u entity.User) (entity.User, error) {
-	res, err := d.db.Exec(`insert into usersTraning(name , phone_number) values(?,?)`, u.Name, u.PhoneNumber)
+	res, err := d.db.Exec(`insert into usersTraning(name , phone_number ,password) values(?,?,?)`, u.Name, u.PhoneNumber, u.Password)
 
 	if err != nil {
 		return entity.User{}, fmt.Errorf("cant execute command %w", err)
